@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سه ماهی - بازی خودشناسی</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            overflow: hidden;
+            background: #000;
+            color: #fff;
+        }
+
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .narrative-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 300;
+            line-height: 1.8;
+            max-width: 700px;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transition: opacity 1s ease;
+            pointer-events: auto;
+        }
+
+        .narrative-text.visible {
+            opacity: 1;
+        }
+
+        .choice-container {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: auto;
+        }
+
+        .choice-container.visible {
+            opacity: 1;
+        }
+
+        .choice-button {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-family: 'Vazirmatn', sans-serif;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            min-width: 300px;
+        }
+
+        .choice-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.6);
+            transform: scale(1.05);
+        }
+
+        .path-indicator {
+            position: absolute;
+            top: 30px;
+            width: 100%;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .path-indicator.visible {
+            opacity: 1;
+        }
+
+        #loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            transition: opacity 1s ease;
+        }
+
+        #loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-text {
+            font-size: 2rem;
+            margin-top: 20px;
+        }
+
+        .gender-select {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 50px;
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: auto;
+        }
+
+        .gender-select.visible {
+            opacity: 1;
+        }
+
+        .gender-select h2 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+        }
+
+        .gender-buttons {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+        }
+
+        .puzzle-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 600px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: auto;
+        }
+
+        .puzzle-overlay.visible {
+            opacity: 1;
+        }
+
+        .puzzle-verse {
+            font-size: 1.4rem;
+            line-height: 2;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .puzzle-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .fade-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            opacity: 0;
+            transition: opacity 2s ease;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .fade-overlay.active {
+            opacity: 1;
+        }
+
+        .instructions {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1rem;
+            opacity: 0.7;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+
+    <div id="ui-overlay">
+        <div id="loading-screen">
+            <div class="loading-text">در حال بارگذاری...</div>
+        </div>
+
+        <div id="gender-select" class="gender-select">
+            <h2>شخصیت خود را انتخاب کنید</h2>
+            <div class="gender-buttons">
+                <button class="choice-button" id="btn-boy">پسر</button>
+                <button class="choice-button" id="btn-girl">دختر</button>
+            </div>
+        </div>
+
+        <div id="path-indicator" class="path-indicator"></div>
+
+        <div id="narrative-text" class="narrative-text"></div>
+
+        <div id="choice-container" class="choice-container"></div>
+
+        <div id="puzzle-overlay" class="puzzle-overlay"></div>
+
+        <div id="fade-overlay" class="fade-overlay"></div>
+
+        <div class="instructions" id="instructions">
+            استفاده از موس برای چرخش دوربین • کلیک برای انتخاب مسیر
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
